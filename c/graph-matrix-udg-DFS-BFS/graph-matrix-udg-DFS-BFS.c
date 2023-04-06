@@ -6,7 +6,7 @@
 #include<stdbool.h>
 #include<assert.h>
 #include"listqueue.h"
-
+#include"liststack.h"
 
 #define MATRIX_VNODE_NUM 100
 
@@ -143,6 +143,41 @@ void DFS(p_matrix_udg pmudg) {
 	}
 }
 
+
+//DFS非递归实现
+void DFSstack(p_matrix_udg pmudg) {
+	printf("DFSstack：");
+
+	list_stack mystack;
+	list_stack_init(&mystack);
+
+	for (int i = 0; i < pmudg->v_num; i++) {
+		if (pmudg->vnodes[i].value == 0) {
+			list_stack_clear(&mystack);
+			list_stack_push(&mystack, i, 0);
+			visit_vnode(&pmudg->vnodes[i]);
+			while (!list_stack_is_empty(&mystack))
+			{
+				int pos = list_stack_pop(&mystack);
+
+				int adjnodes[MATRIX_VNODE_NUM];
+				memset(adjnodes, 0, sizeof(int) * MATRIX_VNODE_NUM);
+				int adjnum = matrix_udg_adjnode(pmudg, i, adjnodes);
+
+				for (int j = 0; j < adjnum; j++) {
+					if (pmudg->vnodes[adjnodes[j]].value == 0) {
+						list_stack_push(&mystack, adjnodes[j], 0);
+						visit_vnode(&pmudg->vnodes[adjnodes[j]]);
+					}
+				}
+			}
+		}
+	}
+	list_stack_uninit(&mystack);
+}
+
+
+
 //BFS遍历
 void BFS(p_matrix_udg pmudg) {
 	printf("BFS：");
@@ -163,7 +198,7 @@ void BFS(p_matrix_udg pmudg) {
 				memset(adjnodes, 0, sizeof(int) * MATRIX_VNODE_NUM);
 				int curnodeidx = matrix_udg_vnode_index(pmudg, pvnode->key);
 				int adjnum = matrix_udg_adjnode(pmudg, curnodeidx, adjnodes);
-				for (int j = 0; j < adjnum; j++)
+				for (int j = adjnum - 1; j >= 0; j--)
 				{
 					if (pmudg->vnodes[adjnodes[j]].value == 0)
 					{
@@ -187,8 +222,16 @@ int main()
 	printf("\n");
 
 	pmudg = matrix_udg_example();
+	DFSstack(pmudg);
+	matrix_udg_uninit(pmudg);
+	printf("\n");
+
+	pmudg = matrix_udg_example();
 	BFS(pmudg);
 	matrix_udg_uninit(pmudg);
+
+
+
 	printf("\nHello World!\n");
 }
 
